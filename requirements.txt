@@ -2,5 +2,7 @@ fastapi
 uvicorn
 torch
 sentence-transformers
-PyDrive2
 chromadb
+pdfplumber
+docx
+bs4

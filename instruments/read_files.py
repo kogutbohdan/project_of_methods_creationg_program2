@@ -3,13 +3,16 @@ import pdfplumber
 from bs4 import BeautifulSoup
 from io import BytesIO
 from sentence_transformers import SentenceTransformer
-
+import numpy as np
 def read_pdf(file=None):
     with pdfplumber.open(BytesIO(file.content)) as f:
         text="" 
         for page in f.pages:
             text+=page.extract_text()
     return text
+
+def normalize( embedding):
+    return embedding / np.linalg.norm(embedding)
 
 def read_docs(file=None):
     print("DOCS")
@@ -38,4 +41,4 @@ class FileReader:
     
     def get_embedding(self,content_type,file=None):
         sentens_transformer=SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-        return sentens_transformer.encode([self.read(content_type=content_type,file=file)])
+        return normalize(sentens_transformer.encode([self.read(content_type=content_type,file=file)]))

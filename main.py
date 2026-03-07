@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sentence_transformers import SentenceTransformer
 import requests as req
-from instruments.read_files import FileReader
+from instruments.read_files import FileReader,normalize
 from pymilvus import (
     connections,
     db,
@@ -14,7 +14,7 @@ from pymilvus import (
 connections.connect(
     alias="default",
     host="localhost",
-    port="5000"
+    port="19530"
 )
 
 db_name="files"
@@ -27,20 +27,22 @@ schema=CollectionSchema([
     FieldSchema(name="id",dtype=DataType.INT64,is_primary=True,auto_id=True),
     FieldSchema(name="vector",dtype=DataType.FLOAT_VECTOR,dim=384),
     FieldSchema(name="url",dtype=DataType.VARCHAR,max_length=1000),
-    FieldSchema(name="name",dtype=DataType.VARCHAR,max_length=100)
+    FieldSchema(name="name",dtype=DataType.VARCHAR,max_length=1000)
 ])
-collection = Collection(name="multilingual_vectors", schema=schema)
+collection = Collection(name="multilingual_vectors2", schema=schema)
 
-collection.create_index({
+collection.create_index(
     "vector",
     {
         "metric_type":"IP",
         "index_type":"HNSW",
         "params":{"M":8,"efConstruction":64}
     }
-})
+)
 
 collection.load()
+
+
 
 app = FastAPI()
 
@@ -51,8 +53,20 @@ def root():
 @app.post("/query")
 def complete_query(query:str):
     sentens_transformer=SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-    query_embedding=sentens_transformer.encode([query])
-    return {"ok":True}
+    query_embedding=normalize(sentens_transformer.encode([query]))
+    result=collection.search(query_embedding,"vector",{
+        "metric_type":"IP",
+        "params":{"ef":64}
+    },10,output_fields=["url","name"])
+    print("RESULT_SEARCH",query_embedding)
+    response=[]
+    for item in result[0]:
+        response.append({
+            "score":item.score,
+            "url":item.entity.get("url"),
+            "name":item.entity.get("name")
+        })
+    return response
 
 @app.post("/file")
 def add_file(path_file:str):
@@ -62,7 +76,7 @@ def add_file(path_file:str):
         })
         content_type = file.headers.get("Content-Type")
         reader=FileReader()
-        collection.insert([reader.get_embedding(content_type=content_type,file=file),path_file,reader.read(content_type=content_type,file=file).split(" ")[0:10].join(" ")])
+        collection.insert([reader.get_embedding(content_type=content_type,file=file),[path_file],[" ".join(reader.read(content_type=content_type,file=file).split(" ")[0:10])]])
         collection.load()
         return {"ok":True}
     except:

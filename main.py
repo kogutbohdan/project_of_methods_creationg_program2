@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from sentence_transformers import SentenceTransformer
+from fastapi.middleware.cors import CORSMiddleware
 import requests as req
 from instruments.read_files import FileReader,normalize
+from instruments.sheme import QuerySheme
 from pymilvus import (
     connections,
     db,
@@ -26,8 +28,8 @@ db.using_database(db_name=db_name)
 schema=CollectionSchema([
     FieldSchema(name="id",dtype=DataType.INT64,is_primary=True,auto_id=True),
     FieldSchema(name="vector",dtype=DataType.FLOAT_VECTOR,dim=384),
-    FieldSchema(name="url",dtype=DataType.VARCHAR,max_length=1000),
-    FieldSchema(name="name",dtype=DataType.VARCHAR,max_length=1000)
+    FieldSchema(name="url",dtype=DataType.VARCHAR,max_length=2000),
+    FieldSchema(name="name",dtype=DataType.VARCHAR,max_length=2000)
 ])
 collection = Collection(name="multilingual_vectors2", schema=schema)
 
@@ -40,20 +42,27 @@ collection.create_index(
     }
 )
 
+
 collection.load()
 
-
-
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root():
     return "Hello World"
 
 @app.post("/query")
-def complete_query(query:str):
+def complete_query(data:QuerySheme):
     sentens_transformer=SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
-    query_embedding=normalize(sentens_transformer.encode([query]))
+    query_embedding=normalize(sentens_transformer.encode([data.query]))
     result=collection.search(query_embedding,"vector",{
         "metric_type":"IP",
         "params":{"ef":64}
@@ -69,15 +78,18 @@ def complete_query(query:str):
     return response
 
 @app.post("/file")
-def add_file(path_file:str):
+def add_file(path_file:QuerySheme):
     try:
-        file=req.get(path_file,headers={
+        file=req.get(path_file.query,headers={
             "User-Agent": "Mozilla/5.0"
         })
         content_type = file.headers.get("Content-Type")
         reader=FileReader()
-        collection.insert([reader.get_embedding(content_type=content_type,file=file),[path_file],[" ".join(reader.read(content_type=content_type,file=file).split(" ")[0:10])]])
+        print(len(path_file.query))
+        print(reader.read(content_type=content_type,file=file).split(" ")[0:10])
+        collection.insert([reader.get_embedding(content_type=content_type,file=file),[path_file.query],[" ".join(reader.read(content_type=content_type,file=file).split(" ")[0:10])]])
         collection.load()
         return {"ok":True}
-    except:
+    except Exception as e:
+        print(e)
         return {"ok":False}

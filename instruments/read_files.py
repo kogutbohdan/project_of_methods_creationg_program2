@@ -4,11 +4,20 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 from sentence_transformers import SentenceTransformer
 import numpy as np
+import random
 def read_pdf(file=None):
     with pdfplumber.open(BytesIO(file.content)) as f:
-        text="" 
-        for page in f.pages:
-            text+=page.extract_text()
+        pages = f.pages[10:]  
+        if len(pages) >= 10:
+            random_pages = random.sample(pages, 10)  
+        else:
+            random_pages = pages
+
+        text = ""
+        for page in random_pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
     return text
 
 def normalize( embedding):

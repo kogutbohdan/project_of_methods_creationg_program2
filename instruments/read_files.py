@@ -2,17 +2,19 @@ import pdfplumber
 #from docx import Document
 from bs4 import BeautifulSoup
 from io import BytesIO
-from sentence_transformers import SentenceTransformer
+from .global_variables import sentens_transformer
 import numpy as np
 import random
+
 def read_pdf(file=None):
     with pdfplumber.open(BytesIO(file.content)) as f:
         pages = f.pages[10:]  
         if len(pages) >= 10:
             random_pages = random.sample(pages, 10)  
-        else:
+        elif len(pages)<10 and len(f.pages)>10:
             random_pages = pages
-
+        else:
+            random_pages = f.pages
         text = ""
         for page in random_pages:
             page_text = page.extract_text()
@@ -39,6 +41,7 @@ class FileReader:
         "application/msword":read_docs,
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document":read_docs,
         "text/html; charset=utf-8":read_html,
+        "text/html; charset=UTF-8":read_html,
         "text/html":read_html
     }
 
@@ -49,5 +52,4 @@ class FileReader:
         print("Невідомий файл")
     
     def get_embedding(self,content_type,file=None):
-        sentens_transformer=SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
         return normalize(sentens_transformer.encode([self.read(content_type=content_type,file=file)]))

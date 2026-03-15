@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from sentence_transformers import SentenceTransformer
 from fastapi.middleware.cors import CORSMiddleware
 import requests as req
 from instruments.read_files import FileReader,normalize
 from instruments.sheme import QuerySheme
+from instruments.global_variables import sentens_transformer
 from pymilvus import (
     connections,
     db,
@@ -61,7 +61,6 @@ def root():
 
 @app.post("/query")
 def complete_query(data:QuerySheme):
-    sentens_transformer=SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
     query_embedding=normalize(sentens_transformer.encode([data.query]))
     result=collection.search(query_embedding,"vector",{
         "metric_type":"IP",

@@ -1,0 +1,2 @@
+from sentence_transformers import SentenceTransformer
+sentens_transformer=SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")

@@ -56,7 +56,6 @@ class FileReader:
         "application/msword":read_docs,
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document":read_docs,
         "text/html; charset=utf-8":read_html,
-        "text/html; charset=UTF-8":read_html,
         "text/html":read_html
     }
 

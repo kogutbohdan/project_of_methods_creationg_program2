@@ -45,7 +45,7 @@ def add_file(path_file:QuerySheme):
         })
         content_type = file.headers.get("Content-Type")
         reader=FileReader()
-        embeddings,names,urls=reader.get_embedding(content_type=content_type,url=path_file.query,file=file)
+        embeddings,names,urls=reader.get_embedding(content_type=content_type.lower(),url=path_file.query,file=file)
         print("Текст сторінок",len(embeddings),"|",len(urls),"|",len(names))
         collection.insert([embeddings,urls,names])
         collection.load()

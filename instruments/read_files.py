@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from io import BytesIO
 from .global_variables import sentens_transformer
 import numpy as np
-import random
 from unidecode import unidecode
 
 def read_pdf(url,file=None):
@@ -33,9 +32,22 @@ def read_docs(file=None):
 
 def read_html(url,file=None):
     soup=BeautifulSoup(file.content,"html.parser")
-    for tag in soup.find_all(["h1","h2","h3"]):
-        print(tag.get_text())
-    return soup.get_text(separator=" ")
+    h=["h1","h2","h3"]
+    texts=[]
+    names=[]
+    for tag in soup.find_all(h):
+        names.append(tag.get_text())
+        content=[]
+        for sibling in tag.next_siblings:
+            if sibling.name in h:
+                break
+            if hasattr(sibling,"get_text"):
+                text=sibling.get_text()
+                if text:
+                    content.append(text)
+        full_text=" ".join(content)
+        texts.append(full_text)
+    return texts,names,[url for i in range(len(texts))]
 
 
 class FileReader:

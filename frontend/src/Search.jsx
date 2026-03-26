@@ -5,7 +5,7 @@ function Search() {
     const [documents,setDocuments]=useState([])
 
     const getContext= async ()=>{
-        const query=await fetch("http://localhost:3000/query",{
+        const query=await fetch("http://localhost:8000/query",{
             method:"POST",
             headers:{
                 "Content-Type":"application/json"
@@ -27,7 +27,7 @@ function Search() {
             <div className="rusults">
                 {documents.map(element=>(
                     <div className="result">
-                        <a href={element["url"]}>{element["name"]}</a>
+                        <a href={element["url"]} className="search__link">{element["name"]}</a>
                     </div>
                 ))}
             </div>

@@ -4,7 +4,7 @@ function AddFile() {
     const [text,setText]=useState("")
 
     const addFile=async ()=>{
-        const url=await fetch("http://localhost:3000/file",{
+        const url=await fetch("http://localhost:8000/file",{
             method:"POST",
             headers:{
                 "Content-Type":"application/json"

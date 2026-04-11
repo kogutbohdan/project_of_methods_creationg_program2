@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Scroll to XPath",
+  "version": "1.0",
+  "description": "Прокручує сторінку до елемента по XPath з URL і підсвічує його",
+  "permissions": ["activeTab", "scripting"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

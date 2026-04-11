@@ -6,3 +6,4 @@ chromadb
 pdfplumber
 docx
 bs4
+wtpsplit

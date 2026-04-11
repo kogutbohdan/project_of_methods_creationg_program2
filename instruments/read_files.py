@@ -1,10 +1,13 @@
 import pdfplumber
 #from docx import Document
-from bs4 import BeautifulSoup
+from lxml import etree,html
 from io import BytesIO
 from .global_variables import sentens_transformer
 import numpy as np
 from unidecode import unidecode
+from .functions import get_sentences_html,get_chuncks_html
+import re
+
 
 def read_pdf(url,file=None):
     with pdfplumber.open(BytesIO(file.content)) as f:
@@ -16,12 +19,16 @@ def read_pdf(url,file=None):
         for page in pages:
             page_text = page.extract_text()
             if page_text:
-                pages_text.append(unidecode(page_text))
-                names.append(" ".join(page_text.split(" ")[0:10]))
-                urls.append(f"{url}#page={page.page_number}")
+                sentences=re.split(r"(?<!^)(?<![A-ZА-ЯІЇЄҐ])\s+(?=[A-ZА-ЯІЇЄҐ])", page_text)
+                pages_text.extend(sentences)
+                print(sentences)
+                for sentence in sentences:
+                    names.append(f"{sentence}...")
+                    urls.append(f"{url}#page={page.page_number}")
             if i>=20:
                 break
             i+=1
+    
     return pages_text,names,urls
 
 def normalize( embedding):
@@ -31,23 +38,12 @@ def read_docs(file=None):
     print("DOCS")
 
 def read_html(url,file=None):
-    soup=BeautifulSoup(file.content,"html.parser")
-    h=["h1","h2","h3"]
-    texts=[]
-    names=[]
-    for tag in soup.find_all(h):
-        names.append(tag.get_text())
-        content=[]
-        for sibling in tag.next_siblings:
-            if sibling.name in h:
-                break
-            if hasattr(sibling,"get_text"):
-                text=sibling.get_text()
-                if text:
-                    content.append(text)
-        full_text=" ".join(content)
-        texts.append(full_text)
-    return texts,names,[url for i in range(len(texts))]
+    tree=html.fromstring(file.content)
+    tree_wrapper = etree.ElementTree(tree)
+    for bad in tree.xpath('//header | //nav | //footer'):
+        bad.getparent().remove(bad)
+    chuncks=get_chuncks_html(tree)
+    return get_sentences_html(url,tree,tree_wrapper,chuncks)
 
 
 class FileReader:
@@ -62,10 +58,12 @@ class FileReader:
     def read(self,content_type,url,file=None):
         print("rabar"+content_type+"rabar")
         if content_type in self.__methods_for_read_file.keys():
-            pages_text,names,urls=self.__methods_for_read_file[content_type](url,file)
-            return pages_text,names,urls
+            return self.__methods_for_read_file[content_type](url,file) 
         print("Невідомий файл")
     
     def get_embedding(self,content_type,url,file=None):
-        pages_text,names,urls=self.read(content_type=content_type,url=url,file=file)
-        return normalize(sentens_transformer.encode(pages_text)),names,urls
+        groups=self.read(content_type=content_type,url=url,file=file)
+        for key in groups:
+            groups[key]["texts"]=normalize(sentens_transformer.encode(groups[key]["texts"]))
+            groups[key]["vector"]=normalize(sentens_transformer.encode(key))
+        return groups

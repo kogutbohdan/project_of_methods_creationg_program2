@@ -38,22 +38,41 @@ input,button{
   flex-direction: column;
 }
 
-.result{
+.result,.list{
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-around;
   margin-top: 20px;
   margin-bottom: 20px;
   transition: 3s ease;
+  min-height:150px;
 }
 
-.control,.result{
+.control{
+   align-items: center;
+}
+
+.control,.result,.list{
   display: flex;
-  align-items: center;
   padding:23px;
   background:#fff;
   border-radius: 14px;
 }
 
+.checkbox{
+  display: none;
+}
+
+.list{
+  min-height: 30px;
+}
+
 nav,.result,.conteiner{
    width:1083px;
+}
+
+.active_checkbox{
+  display:inline;
 }
 
 nav{
@@ -63,25 +82,33 @@ nav{
 
 .search__link{
   color: #155DFC;
-  transition: 0.7s ease;
-}
-
-.search__link:hover{
-  font-size: 23px;
-  color: #155DFC;
-}
-
-.result:hover{
-  width:1094px;
-  height:23px;
-}
-
-.result:hover>.search__link{
+  transition: 0.1s ease;
   font-size: 29px;
 }
 
+.search__link:hover{
+  color: #155DFC;
+  text-decoration: underline;
+}
+
+.result:hover{
+  transform: translateX(100px);
+}
+
+
+
 .link{
   margin-left:10px
+}
+
+input[type="checkbox"]{
+  width:20px;
+  height:20px;
+  margin-top:10px;
+}
+
+.inputs>input{
+  margin-bottom: 10px;
 }
 
 button {

@@ -1,3 +1,4 @@
-from database import collection
+from database import collection_chunks,collection_sentences
 
-collection.drop()
+collection_chunks.drop()
+collection_sentences.drop()

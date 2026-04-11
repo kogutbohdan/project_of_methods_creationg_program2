@@ -56,28 +56,28 @@ def complete_query(data:QuerySheme):
 
 @app.post("/file")
 def add_file(path_file:AddFileSheme):
-    try:
-        url=urlnormilize(path_file.query)
-        print(url)
-        if collection_chunks.query(expr=f"url=='{url}'"):
-            return {"ok":False,"error":"Такий файл вже є"}
-        file=req.get(url,headers={
-            "User-Agent": "Mozilla/5.0"
-        })
-        content_type = file.headers.get("Content-Type")
-        reader=FileReader()
-        groups=reader.get_embedding(content_type=content_type.lower(),url=url,file=file)
-        for key in groups:
-            print(groups[key]["vector"])
-            res=collection_chunks.insert([[groups[key]["vector"]],[url],[path_file.topic.strip()]])
-            chunk_ids=list(res.primary_keys)*len(groups[key]["texts"])
-            collection_sentences.insert([groups[key]["texts"],groups[key]["urls"],chunk_ids,groups[key]["names"]])
-            collection_chunks.load()
-            collection_sentences.load()
-        return {"ok":True}
-    except Exception as e:
+    #try:
+    url=urlnormilize(path_file.query)
+    print(url)
+    if collection_chunks.query(expr=f"url=='{url}'"):
+        return {"ok":False,"error":"Такий файл вже є"}
+    file=req.get(url,headers={
+        "User-Agent": "Mozilla/5.0"
+    })
+    content_type = file.headers.get("Content-Type")
+    reader=FileReader()
+    groups=reader.get_embedding(content_type=content_type.lower(),url=url,file=file)
+    for key in groups:
+        print(groups[key]["vector"])
+        res=collection_chunks.insert([[groups[key]["vector"]],[url],[path_file.topic.strip()]])
+        chunk_ids=list(res.primary_keys)*len(groups[key]["texts"])
+        collection_sentences.insert([groups[key]["texts"],groups[key]["urls"],chunk_ids,groups[key]["names"]])
+        collection_chunks.load()
+        collection_sentences.load()
+    return {"ok":True}
+    """except Exception as e:
         print(e)
-        return {"ok":False}
+        return {"ok":False}"""
     
 @app.get("/topics")
 def get_topic():

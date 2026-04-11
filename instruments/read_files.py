@@ -5,31 +5,15 @@ from io import BytesIO
 from .global_variables import sentens_transformer
 import numpy as np
 from unidecode import unidecode
-from .functions import get_sentences_html,get_chuncks_html
+from .functions import *
 import re
 
 
 def read_pdf(url,file=None):
     with pdfplumber.open(BytesIO(file.content)) as f:
         pages = f.pages[10:]
-        pages_text=[]
-        names=[]
-        urls=[]
-        i=0
-        for page in pages:
-            page_text = page.extract_text()
-            if page_text:
-                sentences=re.split(r"(?<!^)(?<![A-ZА-ЯІЇЄҐ])\s+(?=[A-ZА-ЯІЇЄҐ])", page_text)
-                pages_text.extend(sentences)
-                print(sentences)
-                for sentence in sentences:
-                    names.append(f"{sentence}...")
-                    urls.append(f"{url}#page={page.page_number}")
-            if i>=20:
-                break
-            i+=1
-    
-    return pages_text,names,urls
+        chuncks=get_chuncks_pdf(pages)
+        return get_sentences_pdf(pages,url,chuncks)
 
 def normalize( embedding):
     return embedding / np.linalg.norm(embedding)

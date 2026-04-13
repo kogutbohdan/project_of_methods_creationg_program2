@@ -1,4 +1,3 @@
-from database import collection_chunks,collection_sentences
+from database_conection import Connect
 
-collection_chunks.drop()
-collection_sentences.drop()
+Connect().clear()

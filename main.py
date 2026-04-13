@@ -1,13 +1,15 @@
-from fastapi import FastAPI,Query,Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI,Query,Request,Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 import requests as req
 from instruments.read_files import FileReader,normalize
 from instruments.sheme import QuerySheme,AddFileSheme
 from instruments.global_variables import sentens_transformer
-from instruments.database import collection_chunks,collection_sentences
+from instruments.milvus_database import collection_chunks,collection_sentences
 from instruments.functions import urlnormilize
+from instruments.database_conection import Connect 
+from instruments.sql_database import get_db,Chunck
+from sqlalchemy.orm import Session
 from bs4 import BeautifulSoup
 
 app = FastAPI()
@@ -34,52 +36,43 @@ def render(request: Request,url:str=Query("")):
     return templates.TemplateResponse("index.html",{"request":request,"html_body":html_body})
 
 @app.post("/query")
-def complete_query(data:QuerySheme):
+def complete_query(data:QuerySheme,session:Session=Depends(get_db)):
     query_embedding=normalize(sentens_transformer.encode([data.query]))
-    param_search={
-        "metric_type":"IP",
-        "params":{"ef":64}
-    }
-    result_chuncks=collection_chunks.search(query_embedding,"vector",param_search,5,output_fields=["id"],expr=f"topic in {data.topics}")
-    ids = [hit.id for hit in result_chuncks[0]]
-    result=collection_sentences.search(query_embedding,"vector",param_search,10,output_fields=["id","url","name"],expr=f"chunck_id in {ids}")
-    print("RESULT_SEARCH",query_embedding)
+    database=Connect(session)
+    results=database.search(query_embedding,data.topics)
     response=[]
-    for item in result[0]:
+    for item in results:
         response.append({
-            "id":item.entity.get("id"),
-            "score":item.score,
-            "url":item.entity.get("url"),
-            "name":item.entity.get("name")
+            "id":item.id,
+            "url":item.url,
+            "name":item.name
         })
     return response
 
 @app.post("/file")
-def add_file(path_file:AddFileSheme):
+def add_file(path_file:AddFileSheme,session:Session=Depends(get_db)):
     #try:
     url=urlnormilize(path_file.query)
-    print(url)
-    if collection_chunks.query(expr=f"url=='{url}'"):
+
+    if session.query(Chunck).filter(Chunck.url==url).all():
         return {"ok":False,"error":"Такий файл вже є"}
+    
     file=req.get(url,headers={
         "User-Agent": "Mozilla/5.0"
     })
     content_type = file.headers.get("Content-Type")
+
     reader=FileReader()
     groups=reader.get_embedding(content_type=content_type.lower(),url=url,file=file)
-    for key in groups:
-        print(groups[key]["vector"])
-        res=collection_chunks.insert([[groups[key]["vector"]],[url],[path_file.topic.strip()]])
-        chunk_ids=list(res.primary_keys)*len(groups[key]["texts"])
-        collection_sentences.insert([groups[key]["texts"],groups[key]["urls"],chunk_ids,groups[key]["names"]])
-        collection_chunks.load()
-        collection_sentences.load()
+
+    database=Connect(session)
+    database.add(groups,url,path_file.topic)
     return {"ok":True}
     """except Exception as e:
         print(e)
         return {"ok":False}"""
     
 @app.get("/topics")
-def get_topic():
-    result=collection_chunks.query(expr="topic!=''",output_fields=["topic"])
-    return list({r["topic"] for r in result})
+def get_topic(session:Session=Depends(get_db)):
+    result=session.query(Chunck.topic).distinct().all()
+    return [topic for (topic,) in result]

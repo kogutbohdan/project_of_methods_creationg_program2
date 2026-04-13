@@ -5,17 +5,21 @@ export default function CheckList({isChecked,setIsChecked}){
     const [textFind,setTextFind]=useState("")
     const [active,setActive]=useState(false)
 
+    const random=(topics)=>topics[Math.floor(Math.random()*topics.length)]
+
     useEffect(()=>{
         (async ()=>{
             const topic_query=await fetch("http://localhost:8000/topics")
-            setTopics(await topic_query.json())
+            let res=await topic_query.json()
+            setTopics(res)
+            setIsChecked([random(res)])
         })()
     },[])
 
 
     useEffect(()=>{
         if(isChecked.length===0){
-            let random_topic=topics[Math.floor(Math.random()*topics.length)]
+            let random_topic=random(topics)
             if(random_topic) setIsChecked([random_topic])
         }
     },[isChecked])

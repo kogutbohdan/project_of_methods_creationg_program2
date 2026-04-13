@@ -13,7 +13,7 @@ def read_pdf(url,file=None):
     with pdfplumber.open(BytesIO(file.content)) as f:
         pages = f.pages[10:]
         chuncks=get_chuncks_pdf(pages)
-        return get_sentences_pdf(pages,url,chuncks)
+        return get_sentences_pdf(url,chuncks)
 
 def normalize( embedding):
     return embedding / np.linalg.norm(embedding)

@@ -63,7 +63,7 @@ def get_chuncks_pdf(pagas):
         i+=1
     return creat_chucnks(page_text),numbers_page
 
-def get_sentences_pdf(pages,url,chuncks):
+def get_sentences_pdf(url,chuncks):
     index=0
     count=0
     group_by_chunks={

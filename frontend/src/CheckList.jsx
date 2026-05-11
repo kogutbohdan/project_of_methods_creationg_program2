@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react"
 
-export default function CheckList({isChecked,setIsChecked}){
+export default function CheckList({isChecked,setIsChecked,needOnlyTextOfThisUser}){
     const [topics,setTopics]=useState([])
     const [textFind,setTextFind]=useState("")
     const [active,setActive]=useState(false)
-
     const random=(topics)=>topics[Math.floor(Math.random()*topics.length)]
 
     useEffect(()=>{
         (async ()=>{
-            const topic_query=await fetch("http://localhost:8000/topics")
+            const topic_query=await fetch(`http://localhost:8000/topics?only=${needOnlyTextOfThisUser}`,{
+                credentials: "include"
+            })
             let res=await topic_query.json()
             setTopics(res)
             setIsChecked([random(res)])
         })()
-    },[])
+    },[needOnlyTextOfThisUser])
 
 
     useEffect(()=>{
@@ -30,7 +31,7 @@ export default function CheckList({isChecked,setIsChecked}){
 
     return(
         <div className="list" onClick={e=>setActive(!active)}>
-            <input type="text" onClick={stopPropagation} onChange={e=>setTextFind(e.target.value)}/>
+            <input type="text" onClick={stopPropagation} onChange={e=>setTextFind(e.target.value)} placeholder="Search topic..."/>
             {topics.map(elem=>{
                 if(elem.includes(textFind) || !textFind) return (<label key={elem} className={`checkbox ${active?"active_checkbox":""}`}>
                     <input type="checkbox" checked={isChecked.includes(elem)} onClick={stopPropagation} onChange={e=>{

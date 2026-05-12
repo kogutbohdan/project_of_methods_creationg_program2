@@ -59,26 +59,22 @@ def complete_query(request:Request,data:QuerySheme,session:Session=Depends(get_d
 
 @app.post("/file")
 def add_file(request:Request,path_file:AddFileSheme,session:Session=Depends(get_db)):
-    try:
-        url=urlnormilize(path_file.query)
-
-        if session.query(Chunck).filter(Chunck.url==url).all():
-            return {"ok":False,"msg":"Такий файл вже є"}
-
-        file=req.get(url,headers={
-            "User-Agent": "Mozilla/5.0"
-        })
-        content_type = file.headers.get("Content-Type")
-
-        reader=FileReader()
-        groups=reader.get_embedding(content_type=content_type.lower(),url=url,file=file)
-
-        database=Connect(session,request)
-        database.add(groups,url,path_file.topic)
-        return {"ok":True,"msg":"Данні успішно збережені"}
-    except Exception as e:
-        print(e)
-        return {"ok":False,"msg":"Упс щось пішло не так"}
+    #try:
+    url=urlnormilize(path_file.query)
+    if session.query(Chunck).filter(Chunck.url==url).all():
+        return {"ok":False,"msg":"Такий файл вже є"}
+    file=req.get(url,headers={
+        "User-Agent": "Mozilla/5.0"
+    })
+    content_type = file.headers.get("Content-Type")
+    reader=FileReader()
+    groups=reader.get_embedding(content_type=content_type.lower(),url=url,file=file)
+    database=Connect(session,request)
+    database.add(groups,url,path_file.topic)
+    return {"ok":True,"msg":"Данні успішно збережені"}
+    #except Exception as e:
+    #    print(e)
+    #    return {"ok":False,"msg":"Упс щось пішло не так"}
     
 @app.get("/topics")
 def get_topic(only:bool,request:Request,session:Session=Depends(get_db)):

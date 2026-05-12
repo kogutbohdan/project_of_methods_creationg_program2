@@ -51,7 +51,7 @@ def complete_query(request:Request,data:QuerySheme,session:Session=Depends(get_d
         response.append({
             "id":item.id,
             "url":item.url,
-            "name":item.name
+            "name":item.name if len(item.name)<=100 else item.name[0:100]+"..."
         })
 
     print(response)
@@ -59,22 +59,22 @@ def complete_query(request:Request,data:QuerySheme,session:Session=Depends(get_d
 
 @app.post("/file")
 def add_file(request:Request,path_file:AddFileSheme,session:Session=Depends(get_db)):
-    #try:
-    url=urlnormilize(path_file.query)
-    if session.query(Chunck).filter(Chunck.url==url).all():
-        return {"ok":False,"msg":"Такий файл вже є"}
-    file=req.get(url,headers={
-        "User-Agent": "Mozilla/5.0"
-    })
-    content_type = file.headers.get("Content-Type")
-    reader=FileReader()
-    groups=reader.get_embedding(content_type=content_type.lower(),url=url,file=file)
-    database=Connect(session,request)
-    database.add(groups,url,path_file.topic)
-    return {"ok":True,"msg":"Данні успішно збережені"}
-    #except Exception as e:
-    #    print(e)
-    #    return {"ok":False,"msg":"Упс щось пішло не так"}
+    try:
+        url=urlnormilize(path_file.query)
+        if session.query(Chunck).filter(Chunck.url==url).all():
+            return {"ok":False,"msg":"Такий файл вже є"}
+        file=req.get(url,headers={
+            "User-Agent": "Mozilla/5.0"
+        })
+        content_type = file.headers.get("Content-Type")
+        reader=FileReader()
+        groups=reader.get_embedding(content_type=content_type.lower(),url=url,file=file)
+        database=Connect(session,request)
+        database.add(groups,url,path_file.topic)
+        return {"ok":True,"msg":"Данні успішно збережені"}
+    except Exception as e:
+        print(e)
+        return {"ok":False,"msg":"Упс щось пішло не так"}
     
 @app.get("/topics")
 def get_topic(only:bool,request:Request,session:Session=Depends(get_db)):
@@ -88,25 +88,25 @@ def get_topic(only:bool,request:Request,session:Session=Depends(get_db)):
 
 @app.post("/registration")
 def registration(request:Request,user_info:UsserInfo,session:Session=Depends(get_db)):
-    #try:
-    print(user_info.password)
-    if session.query(User).filter(User.email==user_info.email).first():
-        return {"ok":False,"msg":"Такий email вже є"}
-    if session.query(User).filter(User.username==user_info.user_name).first():
-        return {"ok":False,"msg":"Такий username вже є"}
-    if len(user_info.password)<5:
-        return {"ok":False,"msg":"Пароль за короткий"}
-    password=pwd_context.hash(user_info.password)
-    code="".join([str(randint(0,9)) for i in range(6)])
-    send_massage(f"Ваш код для верефікації:{code}",user_info.email)
-    user=UserBeforeIndentefication(email=user_info.email,password=password,username=user_info.user_name,code=code)
-    session.add(user)
-    session.commit()
-    request.session["new_user_id"]=user.id
-    return {"ok":True}
-    #except Exception as e:
-    #    print(e)
-    #    return {"ok":False,"msg":"Щось пішло не так"}
+    try:
+        print(user_info.password)
+        if session.query(User).filter(User.email==user_info.email).first():
+            return {"ok":False,"msg":"Такий email вже є"}
+        if session.query(User).filter(User.username==user_info.user_name).first():
+            return {"ok":False,"msg":"Такий username вже є"}
+        if len(user_info.password)<5:
+            return {"ok":False,"msg":"Пароль за короткий"}
+        password=pwd_context.hash(user_info.password)
+        code="".join([str(randint(0,9)) for i in range(6)])
+        send_massage(f"Ваш код для верефікації:{code}","Код для верефікації",user_info.email)
+        user=UserBeforeIndentefication(email=user_info.email,password=password,username=user_info.user_name,code=code)
+        session.add(user)
+        session.commit()
+        request.session["new_user_id"]=user.id
+        return {"ok":True}
+    except Exception as e:
+        print(e)
+        return {"ok":False,"msg":"Щось пішло не так"}
 
 
 @app.post("/indentefication")
@@ -188,12 +188,12 @@ def share(shair_info:ShareInfo,request:Request,session:Session=Depends(get_db)):
         is_reletion=session.query(user_relation).filter(user_relation.c.user_id==user.id,user_relation.c.chunck_id==shair_info.id).all()
         if user and chunck and not is_reletion:
             user.chuncks.append(chunck)
-            send_massage("Вам надали доступ до документу",user.email)
+            send_massage("Вам надали доступ до документу",f"від користувача {user.username}",user.email)
             session.commit()
             return {"ok":True}
         if is_reletion:
-            return {"ok":False,"msg":"This user already have this part of document"}
-        return {"ok":False,"msg":"No such user"}
+            return {"ok":False,"msg":"Цей юзер вже має цей документ"}
+        return {"ok":False,"msg":"Нема такого"}
     return {"ok":False}
 
 

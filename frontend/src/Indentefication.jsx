@@ -31,7 +31,7 @@ export default function Indentefication(){
     }
     return(
         <div className="conteiner">
-            <form action="" onSubmit={submmit}>
+            <form action="" onSubmit={submmit} className="control code">
                 <input type="number" value={code} onChange={e=>{
                     let text=e.target.value
                     if(text.length<=6) setCode(text) 

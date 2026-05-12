@@ -41,7 +41,7 @@ export default function Registration(){
                 <input type="text" placeholder="username..." onChange={e=>setUsername(e.target.value)}/>
                 <input type="password" placeholder="password..." onChange={e=>setPassword(e.target.value)}/>
                 <button>Sign up</button>
-                <Link to="/autorization" className="link">Sign up</Link>
+                <Link to="/autorization" className="link">Sign in</Link>
             </form>
             {(Object.keys(responce).length!=0 && !responce?.ok) && <p className={responce?.ok?"msg":"msg msg-error"}>{responce?.msg}</p>}
         </div>

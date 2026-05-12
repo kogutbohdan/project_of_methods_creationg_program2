@@ -1,6 +1,6 @@
 import { useContext, useState } from "react"
 import { RegistrationContext } from "./scripts/context"
-import { useNavigate } from "react-router"
+import { useNavigate,Link } from "react-router"
 
 export default function Autorization(){
     const [username,setUsername]=useState("")
@@ -36,10 +36,11 @@ export default function Autorization(){
     }
     return(
         <div className="conteiner">
-            <form action="" onSubmit={submmit}>
+            <form action="" className="control inputs" onSubmit={submmit}>
                 <input type="text" placeholder="username..." onChange={e=>setUsername(e.target.value)}/>
                 <input type="password" placeholder="password..." onChange={e=>setPassword(e.target.value)}/>
                 <button>Sign in</button>
+                <Link to="/registration" className="link">Sign up</Link>
             </form>
             {(Object.keys(responce).length!=0 && !responce?.ok) && <p className={responce?.ok?"msg":"msg msg-error"}>{responce?.msg}</p>}
         </div>

@@ -4,13 +4,13 @@ from email.mime.multipart import MIMEMultipart
 import ssl
 
 
-def send_massage(text,user_email):
+def send_massage(text,title,user_email):
     sender_email="svitlanakohut1000@gmail.com"
     password="frkd jlpo lmna pffm"
     msg=MIMEMultipart()
     msg["From"]=sender_email
     msg["To"]=user_email
-    msg["Subject"]="Код для верефікації"
+    msg["Subject"]=title
     
     msg.attach(MIMEText(text,"plain"))
 

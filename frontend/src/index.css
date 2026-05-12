@@ -211,6 +211,28 @@ form.control>.link{
   margin-left:10px
 }
 
+.inputs>button{
+  margin-left: 0px;
+  margin-bottom: 10px;
+}
+
+form.code{
+  flex-direction: row;
+  min-height: 0px;
+}
+
+form.code>input{
+  width:70%;
+}
+
+form.code>button{
+  width:20%;
+}
+
+.name{
+  font-size: 20px;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
